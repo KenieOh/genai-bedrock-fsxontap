@@ -111,3 +111,120 @@ To avoid recurring charges, and to clean up your account after trying the soluti
 ```
 terraform apply --destroy
 ```
+
+
+##### FAQs
+
+FAQs for STG317 "Build RAG based GenAI applications on AWS using Amazon FSx for NetApp ONTAP"
+
+o	Q: What is RAG in the context of GenAI applications?
+o	A: RAG stands for Retrieval-Augmented Generation. It's an approach that combines information retrieval with generative AI to produce more accurate and contextually relevant responses.
+
+o	Q: What is the primary data source for this RAG-based GenAI solution?
+o	A: The primary data source is an Amazon FSx for NetApp ONTAP (FSx for ONTAP) filesystem.
+
+o	Q: What is Amazon FSx for NetApp ONTAP?
+o	A: It's a fully managed file storage service that combines AWS's scalability with NetApp's ONTAP file system, providing high-performance, feature-rich file storage in the cloud.
+
+o	Q: Why use FSx for NetApp ONTAP as the data source?
+o	A: Amazon FSx for NetApp ONTAP provides scalable, high-performance storage designed for large datasets and I/O-intensive GenAI workloads, offering efficient data retrieval, management, encryption, access controls, dynamic scaling, high concurrency support, efficient metadata handling, and built-in deduplication and data compression. It is compatible with container orchestration platforms and incorporates AWS security features, ensuring data protection throughout the GenAI pipeline.
+
+o	Q: What provides the vector search capability in this solution and why?
+o	A: An Amazon OpenSearch Serverless (AOSS) is the vector database used because it provides scalable and high-performing similarity searches.
+
+o	Q: Can other vector databases be used in this solution?
+o	A: Yes. In addition to Amazon OpenSearch Serverless, other vector databases that can be used for RAG applications. These databases offer various features like high-performance similarity search, scalability, and integration with different machine learning frameworks, allowing developers to choose the one that best fits their specific requirements and infrastructure setup.
+
+o	Q: How is the vector database populated in this solution?
+o	A: An Embeddings container component periodically migrates existing files, folders, and their ACLs from the FSx for ONTAP filesystem to an Amazon OpenSearch Serverless (AOSS) vector database.
+
+o	Q: How does the solution handle data security and access control?
+o	A: It leverages the existing security and access mechanisms from FSx for ONTAP, including user ACLs, and extends them to the RAG application.
+
+o	Q: What ensures that Bedrock only uses authorized files for each user?
+o	A: The solution combines access control operations with file events, allowing the RAG application to use only embeddings from files the user is authorized to access.
+
+o	Q: Can this solution use any FSx for ONTAP deployment configuration?
+o	A: Yes, it can use either multi-AZ deployment or single AZ deployment with a storage virtual machine (SVM) joined to an AWS Managed Microsoft AD domain.
+
+o	Q: How are Windows ACLs configured and tested in the solution?
+o	A: An Amazon EC2 Windows server is used as an SMB/CIFS client to configure data sharing and ACLs for the SMB shares in the FSx for ONTAP volume.
+
+o	Q: What component is responsible for generating and storing embeddings?
+o	A: The Embeddings container, deployed on an Amazon EC2 Linux server and mounted as an NFS client on the FSx for ONTAP volume, generates embeddings using the Amazon Titan Embeddings model.
+
+o	Q: How does the RAG Retrieval process work in this solution?
+o	A: A RAG Retrieval Lambda function enriches the GenAI prompt with company-specific data retrieved from the AOSS index, using Bedrock APIs.
+
+o	Q: Where is the conversation history stored?
+o	A: The conversation history is stored in an Amazon DynamoDB table.
+
+o	Q: Why use DynamoDB for storing conversation history?
+o	A: Amazon DynamoDB is a serverless, NoSQL, fully managed database with single-digit millisecond performance at any scale. It is an excellent choice for storing conversation history in RAG applications due to its scalability, low-latency performance, and flexible NoSQL schema that can accommodate varying conversation structures. It offers seamless integration with other AWS services, robust security features, and cost-effective pricing, making it well-suited for managing both real-time interactions and long-term storage of conversation data in a production environment.  
+
+o	Q: How can users interact with the solution?
+o	A: Users can interact either through a chatbot application or directly via an Amazon API Gateway API interface.
+
+o	Q: What technology is used for the chatbot application?
+o	A: The chatbot application is built using Langchain.
+
+o	Q: Why use Langchain and Streamlit for the chatbot application?
+o	A: LangChain and Streamlit are commonly used together to create user-friendly LLM-powered applications. Langchain is a framework for developing applications powered by language models (LLMs). It primarily focusses on the backend logic and LLM integration. It helps in combining LLMs with other sources of computation or knowledge. 
+
+o	Q: What technology is used for the chatbot User Interface?
+o	A: The chatbot UI is powered by Streamlit and is fronted by an AWS Application Load Balancer (ALB).
+
+o	Q: Why use Streamlit for the chatbot User Interface?
+o	A: LangChain and Streamlit are commonly used together to create user-friendly LLM-powered applications. Streamlit is chosen for the chatbot user interface due to its simplicity in creating interactive web applications with Python and its rapid prototyping capabilities. It allows developers to quickly build and deploy user-friendly interfaces for AI applications, including chatbots, with minimal front-end development effort, making it an efficient choice for showcasing and iterating on RAG-based conversational AI systems.
+
+o	Q: Why use the AWS Application Load Balancer (ALB) to front the chatbot?
+o	A: The AWS Application Load Balancer (ALB) is used to front the chatbot for two primary reasons: it provides high availability and scalability by distributing incoming traffic across multiple instances of the chatbot application, and it offers advanced routing capabilities and built-in security features. This setup ensures the chatbot can handle varying levels of user traffic efficiently while maintaining performance and reliability.
+
+o	Q: What type of built in security features?
+o	A: AWS Application Load Balancer (ALB) offers several built-in security features:
+o	 SSL/TLS termination for encrypted traffic.
+o	Integration with AWS WAF for protection against web exploits
+o	User authentication through integration with identity providers.
+o	Support for security groups to control inbound and outbound traffic.
+o	Access logging for security analysis and auditing
+
+o	Q: How is permissions-based access to RAG documents currently demonstrated?
+o	A: It's demonstrated by explicitly retrieving the SID of a user and using that SID in the chatbot or API Gateway request, which is then matched to the Windows ACLs configured for the document.
+
+o	Q: Can future enhancements be used for user authentication?
+o	A: Yes, Users can authenticate against an Identity Provider which can match the user’s credentials against the permissions configured for the documents.
+
+o	Q: How are documents processed for embedding?
+o	A: The Embeddings container splits the documents into chunks before creating vector embeddings using the Amazon Titan Embeddings model.
+
+o	Q: Can other chunking methods be used for the embeddings?
+o	A: Yes.
+
+o	Q: How does the solution ensure data consistency between FSx for ONTAP and the AOSS vector database?
+o	A: The Embeddings container periodically scans and updates the AOSS index with any changes in the FSx for ONTAP filesystem.
+
+o	Q: Can this solution handle real-time updates to the vector database from the data source?
+o	A: While the solution periodically updates the vector database, real-time updates can be achieved with additional implementation.
+
+o	Q: How does the solution scale to handle large volumes of data?
+o	A: It leverages the scalability of FSx for ONTAP for storage and AOSS for vector search, both of which are designed to handle large-scale operations.
+
+o	Q: What role does Amazon Bedrock play in this solution?
+o	A: Amazon Bedrock is a fully managed service that makes high-performing foundation models (FMs) from leading AI companies and Amazon available for your use through a unified API. It provides the APIs for interacting with the generative AI model and the embedding model (Amazon Titan).
+
+o	Q: How does the solution handle multi-user concurrent access?
+o	A: The solution uses ALB for the chatbot interface and API Gateway for direct API access, both of which support concurrent users.
+
+o	Q: What types of files can be processed by this solution?
+o	A: The solution can handle various unstructured data types supported by FSx for ONTAP, though specific file type handling may depend on the Embeddings container implementation.
+
+o	Q: Can users search across multiple FSx for ONTAP filesystems?
+o	A: This capability could potentially be extended to support multiple filesystems.
+
+o	Q: Can other AI models be used in this solution? 
+o	A: By using Amazon Bedrock, updates to underlying AI models can be achieved.
+
+o	Q: Is there a limit to the size of documents that can be processed?
+o	A: There may be practical limits based on the Embeddings container and AOSS configurations.
+
+
